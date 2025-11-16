@@ -1,0 +1,912 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sortopia - The Sorting Game</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+            color: #333;
+        }
+
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 20px;
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.1);
+            overflow: hidden;
+        }
+
+        .header {
+            background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);
+            padding: 30px;
+            text-align: center;
+            color: white;
+        }
+
+        .header h1 {
+            font-size: 2.5em;
+            margin-bottom: 10px;
+            text-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+        }
+
+        .header p {
+            font-size: 1.1em;
+            opacity: 0.9;
+        }
+
+        .nav-buttons {
+            display: flex;
+            justify-content: center;
+            gap: 15px;
+            padding: 20px;
+            background: #f8f9fa;
+            border-bottom: 2px solid #e9ecef;
+        }
+
+        .nav-btn {
+            padding: 12px 24px;
+            border: none;
+            border-radius: 25px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .nav-btn.active {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            box-shadow: 0 4px 15px rgba(102, 126, 234, 0.3);
+        }
+
+        .nav-btn:not(.active) {
+            background: white;
+            color: #667eea;
+            border: 2px solid #667eea;
+        }
+
+        .nav-btn:not(.active):hover {
+            background: #667eea;
+            color: white;
+            transform: translateY(-2px);
+        }
+
+        .nav-btn[onclick="resetGame()"] {
+            background: #dc3545 !important;
+            color: white !important;
+            border: 2px solid #dc3545 !important;
+        }
+
+        .nav-btn[onclick="resetGame()"]:hover {
+            background: #c82333 !important;
+            transform: translateY(-2px);
+        }
+
+        .content {
+            padding: 30px;
+        }
+
+        .mode {
+            display: none;
+        }
+
+        .mode.active {
+            display: block;
+        }
+
+        /* Edit Mode Styles */
+        .edit-area textarea {
+            width: 100%;
+            height: 300px;
+            border: 2px solid #e9ecef;
+            border-radius: 12px;
+            padding: 20px;
+            font-size: 16px;
+            line-height: 1.6;
+            resize: vertical;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            transition: border-color 0.3s ease;
+        }
+
+        .edit-area textarea:focus {
+            outline: none;
+            border-color: #667eea;
+            box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+        }
+
+        .edit-instructions {
+            margin-bottom: 20px;
+            padding: 15px;
+            background: #e3f2fd;
+            border-radius: 8px;
+            color: #1565c0;
+        }
+
+        .action-button {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            padding: 15px 30px;
+            border-radius: 25px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            margin-top: 20px;
+            transition: all 0.3s ease;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .action-button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 25px rgba(102, 126, 234, 0.3);
+        }
+
+        .action-button:disabled {
+            background: #ccc;
+            cursor: not-allowed;
+            transform: none;
+            box-shadow: none;
+        }
+
+        /* Play Mode Styles */
+        .quiz-container {
+            min-height: 400px;
+        }
+
+        .quiz-title {
+            text-align: center;
+            font-size: 1.8em;
+            margin-bottom: 30px;
+            color: #333;
+            font-weight: 600;
+        }
+
+        .items-container {
+            min-height: 300px;
+            border: 2px dashed #ddd;
+            border-radius: 12px;
+            padding: 20px;
+            background: #fafafa;
+            transition: border-color 0.3s ease;
+        }
+
+        .items-container.drag-over {
+            border-color: #667eea;
+            background: #f0f4ff;
+        }
+
+        .quiz-item {
+            background: white;
+            padding: 15px 20px;
+            margin: 10px 0;
+            border-radius: 12px;
+            border: 2px solid #e9ecef;
+            cursor: move;
+            user-select: none;
+            transition: all 0.3s ease;
+            position: relative;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+        }
+
+        .quiz-item:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.15);
+            border-color: #667eea;
+        }
+
+        .quiz-item.dragging {
+            opacity: 0.5;
+            transform: rotate(5deg);
+            z-index: 1000;
+        }
+
+        .quiz-item.correct {
+            border-color: #28a745;
+            background: linear-gradient(135deg, #d4edda 0%, #c3e6cb 100%);
+        }
+
+        .quiz-item.incorrect {
+            border-color: #dc3545;
+            background: linear-gradient(135deg, #f8d7da 0%, #f5c6cb 100%);
+        }
+
+        .item-number {
+            display: inline-block;
+            background: #667eea;
+            color: white;
+            width: 30px;
+            height: 30px;
+            border-radius: 50%;
+            text-align: center;
+            line-height: 30px;
+            margin-right: 15px;
+            font-weight: 600;
+            font-size: 14px;
+        }
+
+        .results {
+            margin-top: 30px;
+            padding: 20px;
+            border-radius: 12px;
+            text-align: center;
+            font-size: 1.2em;
+            font-weight: 600;
+        }
+
+        .results.success {
+            background: linear-gradient(135deg, #d4edda 0%, #c3e6cb 100%);
+            color: #155724;
+            border: 2px solid #28a745;
+        }
+
+        .results.partial {
+            background: linear-gradient(135deg, #fff3cd 0%, #ffeaa7 100%);
+            color: #856404;
+            border: 2px solid #ffc107;
+        }
+
+        .share-section {
+            margin-top: 30px;
+            padding: 20px;
+            background: #f8f9fa;
+            border-radius: 12px;
+        }
+
+        .share-url {
+            width: 100%;
+            padding: 15px;
+            border: 2px solid #e9ecef;
+            border-radius: 8px;
+            font-family: monospace;
+            font-size: 14px;
+            background: white;
+            word-break: break-all;
+        }
+
+        .copy-button {
+            background: #28a745;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 20px;
+            margin-top: 10px;
+            cursor: pointer;
+            font-weight: 600;
+        }
+
+        .copy-button:hover {
+            background: #218838;
+        }
+
+        .empty-state {
+            text-align: center;
+            padding: 60px 20px;
+            color: #666;
+        }
+
+        .empty-state h3 {
+            font-size: 1.5em;
+            margin-bottom: 15px;
+        }
+
+        .empty-state p {
+            font-size: 1.1em;
+            line-height: 1.6;
+        }
+
+        /* Mobile Responsive */
+        @media (max-width: 768px) {
+            body {
+                padding: 10px;
+            }
+
+            .header h1 {
+                font-size: 2em;
+            }
+
+            .nav-buttons {
+                flex-direction: column;
+                gap: 10px;
+            }
+
+            .nav-btn {
+                font-size: 14px;
+                padding: 12px 20px;
+            }
+        }
+
+        @media (max-width: 600px) {
+            .nav-buttons {
+                flex-direction: column;
+                gap: 8px;
+            }
+        }
+
+            .content {
+                padding: 20px;
+            }
+
+            .quiz-item {
+                padding: 12px 15px;
+                margin: 8px 0;
+            }
+
+            .item-number {
+                width: 25px;
+                height: 25px;
+                line-height: 25px;
+                margin-right: 10px;
+                font-size: 12px;
+            }
+        }
+
+        /* Touch-friendly improvements */
+        @media (hover: none) {
+            .quiz-item {
+                padding: 18px 20px;
+                margin: 12px 0;
+            }
+            
+            .nav-btn, .action-button {
+                padding: 15px 30px;
+                min-height: 50px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header class="header">
+            <h1>� Sortopia</h1>
+            <p>Welcome to the magical world of sorting! Drag and drop items to put them in perfect order</p>
+        </header>
+
+        <nav class="nav-buttons">
+            <button class="nav-btn active" onclick="switchMode('play')">Play Sortopia</button>
+            <button class="nav-btn" onclick="switchMode('edit')">Create Challenge</button>
+            <button class="nav-btn" onclick="resetGame()" style="background: #dc3545; color: white; border: 2px solid #dc3545;">Reset All</button>
+        </nav>
+
+        <div class="content">
+            <!-- Play Mode -->
+            <div id="play-mode" class="mode active">
+                <div id="quiz-content" class="quiz-container">
+                    <div class="empty-state">
+                        <h3>No Challenge Loaded</h3>
+                        <p>Create a new challenge using the "Create Challenge" tab (first line = title, then items to sort), or load one from a shared link.</p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Edit Mode -->
+            <div id="edit-mode" class="mode">
+                <div class="edit-instructions">
+                    <strong>🎨 How to create a Sortopia challenge:</strong><br>
+                    The first line will be your challenge title. Then enter each item on a separate line. 
+                    The first item should be the "first" in order, the last item should be "last" in order.
+                    For example, for historical events, start with the earliest and end with the most recent.
+                </div>
+                
+                <div class="edit-area">
+                    <textarea id="quiz-items" placeholder="Enter your challenge title on the first line, then items to sort. For example:
+
+History Timeline Challenge
+
+World War I begins (1914)
+Russian Revolution (1917)
+Stock Market Crash (1929)
+World War II begins (1939)
+Moon Landing (1969)"></textarea>
+                </div>
+                
+                <button class="action-button" onclick="createQuiz()">Create Challenge</button>
+                
+                <div id="share-section" class="share-section" style="display: none;">
+                    <h3>📤 Share Your Challenge</h3>
+                    <p>Copy this link to share your Sortopia challenge with others:</p>
+                    <input type="text" id="share-url" class="share-url" readonly>
+                    <button class="copy-button" onclick="copyShareUrl()">Copy Link</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Game state
+        let currentQuiz = null;
+        let userOrder = [];
+        let gameCompleted = false;
+
+        // Initialize the game
+        document.addEventListener('DOMContentLoaded', function() {
+            loadFromUrl();
+            loadFromLocalStorage();
+        });
+
+        // Mode switching
+        function switchMode(mode) {
+            document.querySelectorAll('.nav-btn').forEach(btn => btn.classList.remove('active'));
+            document.querySelectorAll('.mode').forEach(m => m.classList.remove('active'));
+            
+            event.target.classList.add('active');
+            document.getElementById(mode + '-mode').classList.add('active');
+        }
+
+        // Create quiz from text input
+        function createQuiz() {
+            const textarea = document.getElementById('quiz-items');
+            const text = textarea.value.trim();
+            
+            if (!text) {
+                alert('Please enter a challenge title and some items to sort!');
+                return;
+            }
+
+            const lines = text.split('\n')
+                .map(line => line.trim())
+                .filter(line => line.length > 0);
+
+            if (lines.length < 2) {
+                alert('Please enter a challenge title and at least 1 item to sort!');
+                return;
+            }
+
+            // First line is the title, rest are items to sort
+            const title = lines[0];
+            const items = lines.slice(1);
+
+            if (items.length < 1) {
+                alert('Please enter at least 1 item to sort after the title!');
+                return;
+            }
+
+            currentQuiz = {
+                items: items,
+                correctOrder: [...items],
+                title: title
+            };
+
+            // Save to localStorage
+            localStorage.setItem('currentQuiz', JSON.stringify(currentQuiz));
+
+            // Generate share URL
+            const encoded = btoa(JSON.stringify(currentQuiz));
+            const shareUrl = window.location.origin + window.location.pathname + '?quiz=' + encoded;
+            
+            document.getElementById('share-url').value = shareUrl;
+            document.getElementById('share-section').style.display = 'block';
+
+            // Switch to play mode and start the quiz
+            switchToPlayMode();
+            startQuiz();
+        }
+
+        function switchToPlayMode() {
+            document.querySelectorAll('.nav-btn').forEach(btn => btn.classList.remove('active'));
+            document.querySelectorAll('.mode').forEach(m => m.classList.remove('active'));
+            
+            document.querySelector('.nav-btn[onclick="switchMode(\'play\')"]').classList.add('active');
+            document.getElementById('play-mode').classList.add('active');
+        }
+
+        // Start/restart the quiz
+        function startQuiz() {
+            if (!currentQuiz) return;
+
+            gameCompleted = false;
+            
+            // Shuffle the items for the user to reorder
+            userOrder = [...currentQuiz.items];
+            shuffleArray(userOrder);
+
+            // Save initial state
+            saveGameState();
+
+            renderQuiz();
+        }
+
+        // Render the quiz interface
+        function renderQuiz() {
+            const container = document.getElementById('quiz-content');
+            
+            container.innerHTML = `
+                <div class="quiz-title">${currentQuiz.title}</div>
+                <p style="text-align: center; margin-bottom: 20px; color: #666;">
+                    Drag and drop the items to put them in the correct order
+                </p>
+                <div class="items-container" id="items-container">
+                    ${userOrder.map((item, index) => `
+                        <div class="quiz-item" draggable="true" data-index="${index}">
+                            <span class="item-number">${index + 1}</span>
+                            ${item}
+                        </div>
+                    `).join('')}
+                </div>
+                <button class="action-button" onclick="checkAnswers()" style="margin-right: 15px;">Check Answers</button>
+                <button class="action-button" onclick="shuffleItems()" style="background: linear-gradient(135deg, #ffc107 0%, #ff8c00 100%);">Shuffle</button>
+                <div id="results"></div>
+            `;
+
+            setupDragAndDrop();
+        }
+
+        // Shuffle array function
+        function shuffleArray(array) {
+            for (let i = array.length - 1; i > 0; i--) {
+                const j = Math.floor(Math.random() * (i + 1));
+                [array[i], array[j]] = [array[j], array[i]];
+            }
+        }
+
+        // Shuffle items and re-render
+        function shuffleItems() {
+            if (gameCompleted) return;
+            
+            shuffleArray(userOrder);
+            saveGameState();
+            renderQuiz();
+        }
+
+        // Setup drag and drop functionality
+        function setupDragAndDrop() {
+            const container = document.getElementById('items-container');
+            const items = container.querySelectorAll('.quiz-item');
+
+            items.forEach(item => {
+                // Mouse events
+                item.addEventListener('dragstart', handleDragStart);
+                item.addEventListener('dragend', handleDragEnd);
+
+                // Touch events for mobile
+                item.addEventListener('touchstart', handleTouchStart, { passive: false });
+                item.addEventListener('touchmove', handleTouchMove, { passive: false });
+                item.addEventListener('touchend', handleTouchEnd, { passive: false });
+            });
+
+            container.addEventListener('dragover', handleDragOver);
+            container.addEventListener('drop', handleDrop);
+            container.addEventListener('dragenter', e => e.preventDefault());
+            container.addEventListener('dragleave', handleDragLeave);
+        }
+
+        let draggedElement = null;
+        let touchStartY = 0;
+        let touchElement = null;
+        let placeholder = null;
+
+        function handleDragStart(e) {
+            if (gameCompleted) {
+                e.preventDefault();
+                return;
+            }
+            
+            draggedElement = this;
+            this.classList.add('dragging');
+            e.dataTransfer.effectAllowed = 'move';
+        }
+
+        function handleDragEnd(e) {
+            this.classList.remove('dragging');
+            document.getElementById('items-container').classList.remove('drag-over');
+        }
+
+        function handleDragOver(e) {
+            e.preventDefault();
+            e.dataTransfer.dropEffect = 'move';
+            this.classList.add('drag-over');
+
+            const afterElement = getDragAfterElement(this, e.clientY);
+            if (afterElement == null) {
+                this.appendChild(draggedElement);
+            } else {
+                this.insertBefore(draggedElement, afterElement);
+            }
+        }
+
+        function handleDrop(e) {
+            e.preventDefault();
+            this.classList.remove('drag-over');
+            updateOrder();
+        }
+
+        function handleDragLeave(e) {
+            if (!this.contains(e.relatedTarget)) {
+                this.classList.remove('drag-over');
+            }
+        }
+
+        // Touch event handlers for mobile
+        function handleTouchStart(e) {
+            if (gameCompleted) return;
+            
+            touchElement = this;
+            touchStartY = e.touches[0].clientY;
+            
+            // Create placeholder
+            placeholder = document.createElement('div');
+            placeholder.className = 'quiz-item';
+            placeholder.style.opacity = '0.5';
+            placeholder.style.border = '2px dashed #667eea';
+            placeholder.innerHTML = '<span class="item-number">⋯</span>Drop here';
+            
+            this.style.position = 'fixed';
+            this.style.zIndex = '1000';
+            this.style.pointerEvents = 'none';
+            this.style.transform = 'rotate(5deg)';
+            this.style.opacity = '0.8';
+            
+            this.parentNode.insertBefore(placeholder, this.nextSibling);
+        }
+
+        function handleTouchMove(e) {
+            if (!touchElement || gameCompleted) return;
+            
+            e.preventDefault();
+            
+            const touch = e.touches[0];
+            const element = touchElement;
+            
+            element.style.left = (touch.clientX - element.offsetWidth / 2) + 'px';
+            element.style.top = (touch.clientY - element.offsetHeight / 2) + 'px';
+            
+            // Find the element we're hovering over
+            element.style.pointerEvents = 'none';
+            const elementBelow = document.elementFromPoint(touch.clientX, touch.clientY);
+            element.style.pointerEvents = 'auto';
+            
+            if (elementBelow && elementBelow.classList.contains('quiz-item') && elementBelow !== placeholder) {
+                const container = document.getElementById('items-container');
+                const afterElement = getDragAfterElement(container, touch.clientY);
+                
+                if (afterElement == null) {
+                    container.appendChild(placeholder);
+                } else {
+                    container.insertBefore(placeholder, afterElement);
+                }
+            }
+        }
+
+        function handleTouchEnd(e) {
+            if (!touchElement || gameCompleted) return;
+            
+            const element = touchElement;
+            
+            // Reset styles
+            element.style.position = '';
+            element.style.zIndex = '';
+            element.style.pointerEvents = '';
+            element.style.transform = '';
+            element.style.opacity = '';
+            element.style.left = '';
+            element.style.top = '';
+            
+            // Replace placeholder with actual element
+            if (placeholder && placeholder.parentNode) {
+                placeholder.parentNode.insertBefore(element, placeholder);
+                placeholder.remove();
+            }
+            
+            touchElement = null;
+            placeholder = null;
+            
+            updateOrder();
+        }
+
+        function getDragAfterElement(container, y) {
+            const draggableElements = [...container.querySelectorAll('.quiz-item:not(.dragging)')];
+            
+            return draggableElements.reduce((closest, child) => {
+                const box = child.getBoundingClientRect();
+                const offset = y - box.top - box.height / 2;
+                
+                if (offset < 0 && offset > closest.offset) {
+                    return { offset: offset, element: child };
+                } else {
+                    return closest;
+                }
+            }, { offset: Number.NEGATIVE_INFINITY }).element;
+        }
+
+        function updateOrder() {
+            const items = document.querySelectorAll('.quiz-item');
+            userOrder = Array.from(items).map(item => {
+                const text = item.textContent.trim();
+                return text.substring(text.indexOf(' ') + 1); // Remove the number prefix
+            });
+            
+            // Update item numbers
+            items.forEach((item, index) => {
+                const numberSpan = item.querySelector('.item-number');
+                numberSpan.textContent = index + 1;
+                item.setAttribute('data-index', index);
+            });
+            
+            saveGameState();
+        }
+
+        // Check if the current order is correct
+        function checkAnswers() {
+            if (!currentQuiz || gameCompleted) return;
+            
+            gameCompleted = true;
+            const items = document.querySelectorAll('.quiz-item');
+            let correctCount = 0;
+            
+            items.forEach((item, index) => {
+                const itemText = item.textContent.trim().substring(item.textContent.trim().indexOf(' ') + 1);
+                const isCorrect = itemText === currentQuiz.correctOrder[index];
+                
+                if (isCorrect) {
+                    item.classList.add('correct');
+                    correctCount++;
+                } else {
+                    item.classList.add('incorrect');
+                }
+                
+                item.draggable = false;
+                item.style.cursor = 'default';
+            });
+            
+            // Show results
+            const resultsDiv = document.getElementById('results');
+            const percentage = Math.round((correctCount / currentQuiz.items.length) * 100);
+            
+            if (correctCount === currentQuiz.items.length) {
+                resultsDiv.innerHTML = `
+                    <div class="results success">
+                        🎉 Perfect! You got all ${correctCount} items in the correct order!
+                    </div>
+                `;
+            } else {
+                resultsDiv.innerHTML = `
+                    <div class="results partial">
+                        You got ${correctCount} out of ${currentQuiz.items.length} items correct (${percentage}%)
+                    </div>
+                `;
+            }
+            
+            // Add restart button
+            resultsDiv.innerHTML += `
+                <button class="action-button" onclick="startQuiz()" style="margin-top: 15px;">
+                    Try Again
+                </button>
+            `;
+            
+            saveGameState();
+        }
+
+        // Copy share URL to clipboard
+        function copyShareUrl() {
+            const urlInput = document.getElementById('share-url');
+            urlInput.select();
+            urlInput.setSelectionRange(0, 99999);
+            
+            try {
+                document.execCommand('copy');
+                const button = event.target;
+                const originalText = button.textContent;
+                button.textContent = 'Copied!';
+                button.style.background = '#28a745';
+                
+                setTimeout(() => {
+                    button.textContent = originalText;
+                    button.style.background = '';
+                }, 2000);
+            } catch (err) {
+                alert('Copy failed. Please copy the URL manually.');
+            }
+        }
+
+        // Load quiz from URL parameter
+        function loadFromUrl() {
+            const urlParams = new URLSearchParams(window.location.search);
+            const quizData = urlParams.get('quiz');
+            
+            if (quizData) {
+                try {
+                    const decoded = JSON.parse(atob(quizData));
+                    currentQuiz = decoded;
+                    // Always start fresh with a shuffled quiz when loaded from URL
+                    startQuiz();
+                } catch (error) {
+                    console.error('Failed to load quiz from URL:', error);
+                }
+            }
+        }
+
+        // Save game state to localStorage
+        function saveGameState() {
+            if (currentQuiz) {
+                const gameState = {
+                    quiz: currentQuiz,
+                    userOrder: userOrder,
+                    completed: gameCompleted
+                };
+                localStorage.setItem('gameState', JSON.stringify(gameState));
+            }
+        }
+
+        // Load game state from localStorage
+        function loadFromLocalStorage() {
+            if (currentQuiz) return; // URL takes precedence
+            
+            const savedState = localStorage.getItem('gameState');
+            if (savedState) {
+                try {
+                    const gameState = JSON.parse(savedState);
+                    currentQuiz = gameState.quiz;
+                    userOrder = gameState.userOrder;
+                    gameCompleted = gameState.completed || false;
+                    
+                    // If no saved user order, start with a shuffled version
+                    if (!userOrder || userOrder.length === 0) {
+                        userOrder = [...currentQuiz.items];
+                        shuffleArray(userOrder);
+                    }
+                    
+                    if (currentQuiz) {
+                        renderQuiz();
+                        if (gameCompleted) {
+                            checkAnswers();
+                        }
+                    }
+                } catch (error) {
+                    console.error('Failed to load game state:', error);
+                }
+            }
+        }
+
+        // Reset game - clear all local storage
+        function resetGame() {
+            const confirmed = confirm('⚠️ Are you sure you want to reset Sortopia?\n\nThis will:\n• Clear your current challenge\n• Delete all saved progress\n• Remove all stored data\n\nThis action cannot be undone.');
+            
+            if (confirmed) {
+                // Clear all localStorage data
+                localStorage.removeItem('currentQuiz');
+                localStorage.removeItem('gameState');
+                
+                // Reset game state
+                currentQuiz = null;
+                userOrder = [];
+                gameCompleted = false;
+                
+                // Clear the quiz content area
+                const container = document.getElementById('quiz-content');
+                container.innerHTML = `
+                    <div class="empty-state">
+                        <h3>Sortopia Reset Complete</h3>
+                        <p>All data has been cleared. Create a new challenge using the "Create Challenge" tab, or load one from a shared link.</p>
+                    </div>
+                `;
+                
+                // Clear the edit area
+                document.getElementById('quiz-items').value = '';
+                document.getElementById('share-section').style.display = 'none';
+                
+                // Switch to play mode
+                switchToPlayMode();
+                
+                // Show success message
+                setTimeout(() => {
+                    alert('✅ Sortopia reset successfully! All local data has been cleared.');
+                }, 100);
+            }
+        }
+    </script>
+</body>
+</html>
