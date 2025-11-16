@@ -1,9 +1,27 @@
 <!DOCTYPE html>
+<!--
+    Sortopia - The Sorting Game v1.0.0
+    A fun, interactive single-page application for creating and playing ordering challenges.
+    
+    Features:
+    - Drag & drop interface (desktop + mobile)
+    - Tap-to-select for mobile
+    - Custom challenge creation & editing
+    - URL-based sharing (no server required)
+    - Local storage for progress
+    - Responsive design
+    
+    Author: GitHub User
+    Repository: https://github.com/awormus/sortopia
+    License: MIT
+    
+    Built with vanilla HTML, CSS, and JavaScript - no dependencies!
+-->
 <html lang="en">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Sortopia - The Sorting Game</title>
+    <title>Sortopia - The Sorting Game v1.0.0</title>
     <style>
         * {
             margin: 0;
@@ -26,6 +44,10 @@
             border-radius: 20px;
             box-shadow: 0 20px 40px rgba(0, 0, 0, 0.1);
             overflow: hidden;
+            user-select: none;
+            -webkit-user-select: none;
+            -moz-user-select: none;
+            -ms-user-select: none;
         }
 
         .header {
@@ -33,6 +55,57 @@
             padding: 30px;
             text-align: center;
             color: white;
+            position: relative;
+        }
+
+        .header-content {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            position: relative;
+        }
+
+        .header-text {
+            flex: 1;
+        }
+
+        .hamburger-menu {
+            position: absolute;
+            left: 0;
+            top: 50%;
+            transform: translateY(-50%);
+            background: none;
+            border: none;
+            cursor: pointer;
+            padding: 10px;
+            display: flex;
+            flex-direction: column;
+            gap: 4px;
+            z-index: 1000;
+        }
+
+        .hamburger-menu span {
+            width: 25px;
+            height: 3px;
+            background: white;
+            border-radius: 2px;
+            transition: all 0.3s ease;
+        }
+
+        .hamburger-menu:hover span {
+            background: rgba(255, 255, 255, 0.8);
+        }
+
+        .hamburger-menu.active span:nth-child(1) {
+            transform: rotate(45deg) translate(7px, 7px);
+        }
+
+        .hamburger-menu.active span:nth-child(2) {
+            opacity: 0;
+        }
+
+        .hamburger-menu.active span:nth-child(3) {
+            transform: rotate(-45deg) translate(7px, -7px);
         }
 
         .header h1 {
@@ -47,12 +120,17 @@
         }
 
         .nav-buttons {
-            display: flex;
+            display: none;
             justify-content: center;
             gap: 15px;
             padding: 20px;
             background: #f8f9fa;
             border-bottom: 2px solid #e9ecef;
+            transition: all 0.3s ease;
+        }
+
+        .nav-buttons.show {
+            display: flex;
         }
 
         .nav-btn {
@@ -198,6 +276,11 @@
             border: 2px solid #e9ecef;
             cursor: move;
             user-select: none;
+            -webkit-user-select: none;
+            -moz-user-select: none;
+            -ms-user-select: none;
+            -webkit-touch-callout: none;
+            -webkit-tap-highlight-color: transparent;
             transition: all 0.3s ease;
             position: relative;
             box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
@@ -223,6 +306,45 @@
         .quiz-item.incorrect {
             border-color: #dc3545;
             background: linear-gradient(135deg, #f8d7da 0%, #f5c6cb 100%);
+        }
+
+        .quiz-item.selected {
+            border-color: #ffc107;
+            background: linear-gradient(135deg, #fff3cd 0%, #ffeaa7 100%);
+            box-shadow: 0 0 0 3px rgba(255, 193, 7, 0.3);
+            transform: scale(1.02);
+        }
+
+        .quiz-item.drop-target {
+            border-color: #28a745;
+            background: linear-gradient(135deg, #d4edda 0%, #c3e6cb 100%);
+            box-shadow: 0 0 0 3px rgba(40, 167, 69, 0.3);
+        }
+
+        .tap-mode-indicator {
+            position: fixed;
+            top: 20px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: rgba(255, 193, 7, 0.95);
+            color: #856404;
+            padding: 10px 20px;
+            border-radius: 20px;
+            font-weight: 600;
+            z-index: 2000;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
+            animation: slideDown 0.3s ease;
+        }
+
+        @keyframes slideDown {
+            from {
+                transform: translateX(-50%) translateY(-100%);
+                opacity: 0;
+            }
+            to {
+                transform: translateX(-50%) translateY(0);
+                opacity: 1;
+            }
         }
 
         .item-number {
@@ -319,6 +441,14 @@
                 font-size: 2em;
             }
 
+            .header {
+                padding: 20px;
+            }
+
+            .hamburger-menu {
+                left: 10px;
+            }
+
             .nav-buttons {
                 flex-direction: column;
                 gap: 10px;
@@ -372,11 +502,20 @@
 <body>
     <div class="container">
         <header class="header">
-            <h1>� Sortopia</h1>
-            <p>Welcome to the magical world of sorting! Drag and drop items to put them in perfect order</p>
+            <div class="header-content">
+                <button class="hamburger-menu" onclick="toggleMenu()" aria-label="Menu">
+                    <span></span>
+                    <span></span>
+                    <span></span>
+                </button>
+                <div class="header-text">
+                    <h1 id="main-title">🎨 Sortopia</h1>
+                    <p id="main-subtitle">Welcome to the magical world of sorting! Drag and drop items to put them in perfect order</p>
+                </div>
+            </div>
         </header>
 
-        <nav class="nav-buttons">
+        <nav class="nav-buttons" id="nav-menu">
             <button class="nav-btn active" onclick="switchMode('play')">Play Sortopia</button>
             <button class="nav-btn" onclick="switchMode('edit')">Create Challenge</button>
             <button class="nav-btn" onclick="resetGame()" style="background: #dc3545; color: white; border: 2px solid #dc3545;">Reset All</button>
@@ -436,7 +575,44 @@ Moon Landing (1969)"></textarea>
         document.addEventListener('DOMContentLoaded', function() {
             loadFromUrl();
             loadFromLocalStorage();
+            updateHeaderForGameMode();
         });
+
+        // Hamburger menu toggle
+        function toggleMenu() {
+            const menu = document.getElementById('nav-menu');
+            const hamburger = document.querySelector('.hamburger-menu');
+            
+            menu.classList.toggle('show');
+            hamburger.classList.toggle('active');
+        }
+
+        // Update header based on game mode
+        function updateHeaderForGameMode() {
+            const title = document.getElementById('main-title');
+            const subtitle = document.getElementById('main-subtitle');
+            
+            if (currentQuiz && currentQuiz.title) {
+                title.textContent = currentQuiz.title;
+                subtitle.textContent = 'Drag and drop items to put them in the correct order';
+            } else {
+                title.textContent = '🎨 Sortopia';
+                subtitle.textContent = 'Welcome to the magical world of sorting! Drag and drop items to put them in perfect order';
+            }
+            
+            // Update navigation button text
+            updateNavigationButtons();
+        }
+
+        // Update navigation button text based on whether a quiz is loaded
+        function updateNavigationButtons() {
+            const createBtn = document.querySelector('.nav-btn[onclick="switchMode(\'edit\')"]');
+            if (currentQuiz && currentQuiz.title) {
+                createBtn.textContent = 'Edit Challenge';
+            } else {
+                createBtn.textContent = 'Create Challenge';
+            }
+        }
 
         // Mode switching
         function switchMode(mode) {
@@ -445,6 +621,97 @@ Moon Landing (1969)"></textarea>
             
             event.target.classList.add('active');
             document.getElementById(mode + '-mode').classList.add('active');
+            
+            // Hide menu after selection
+            const menu = document.getElementById('nav-menu');
+            const hamburger = document.querySelector('.hamburger-menu');
+            menu.classList.remove('show');
+            hamburger.classList.remove('active');
+            
+            // Update edit mode content based on whether we're editing or creating
+            if (mode === 'edit') {
+                updateEditMode();
+            }
+            
+            // Update header
+            updateHeaderForGameMode();
+        }
+
+        // Update edit mode content based on current state
+        function updateEditMode(forceCreateMode = false) {
+            const instructions = document.querySelector('.edit-instructions');
+            const textarea = document.getElementById('quiz-items');
+            const actionButton = document.querySelector('.action-button[onclick="createQuiz()"]');
+            const shareSection = document.getElementById('share-section');
+            
+            if (currentQuiz && currentQuiz.title && !forceCreateMode) {
+                // Edit mode
+                instructions.innerHTML = `
+                    <strong>✏️ Edit your Sortopia challenge:</strong><br>
+                    The first line will be your challenge title. Then enter each item on a separate line. 
+                    The first item should be the "first" in order, the last item should be "last" in order.
+                `;
+                
+                // Populate textarea with current quiz data
+                const quizText = [currentQuiz.title, ...currentQuiz.items].join('\n');
+                textarea.value = quizText;
+                
+                // Change button to "Save Changes" and update buttons
+                actionButton.style.display = 'none';
+                
+                // Show edit buttons
+                showEditButtons();
+                
+                // Hide share section initially
+                shareSection.style.display = 'none';
+                
+            } else {
+                // Create mode
+                instructions.innerHTML = `
+                    <strong>🎨 How to create a Sortopia challenge:</strong><br>
+                    The first line will be your challenge title. Then enter each item on a separate line. 
+                    The first item should be the "first" in order, the last item should be "last" in order.
+                    For example, for historical events, start with the earliest and end with the most recent.
+                `;
+                
+                // Clear textarea
+                textarea.value = '';
+                
+                // Show create button
+                actionButton.style.display = 'inline-block';
+                
+                // Hide edit buttons
+                hideEditButtons();
+                
+                // Hide share section
+                shareSection.style.display = 'none';
+            }
+        }
+
+        function showEditButtons() {
+            let editButtonsContainer = document.getElementById('edit-buttons-container');
+            if (!editButtonsContainer) {
+                editButtonsContainer = document.createElement('div');
+                editButtonsContainer.id = 'edit-buttons-container';
+                editButtonsContainer.style.marginTop = '20px';
+                
+                editButtonsContainer.innerHTML = `
+                    <button class="action-button" onclick="saveChallenge()" style="margin-right: 15px;">Save Changes</button>
+                    <button class="action-button" onclick="resetEditForm()" style="background: linear-gradient(135deg, #6c757d 0%, #495057 100%);">Reset Form</button>
+                `;
+                
+                // Insert after the textarea
+                const editArea = document.querySelector('.edit-area');
+                editArea.appendChild(editButtonsContainer);
+            }
+            editButtonsContainer.style.display = 'block';
+        }
+
+        function hideEditButtons() {
+            const editButtonsContainer = document.getElementById('edit-buttons-container');
+            if (editButtonsContainer) {
+                editButtonsContainer.style.display = 'none';
+            }
         }
 
         // Create quiz from text input
@@ -496,6 +763,72 @@ Moon Landing (1969)"></textarea>
             startQuiz();
         }
 
+        // Save changes to existing challenge
+        function saveChallenge() {
+            const textarea = document.getElementById('quiz-items');
+            const text = textarea.value.trim();
+            
+            if (!text) {
+                alert('Please enter a challenge title and some items to sort!');
+                return;
+            }
+
+            const lines = text.split('\n')
+                .map(line => line.trim())
+                .filter(line => line.length > 0);
+
+            if (lines.length < 2) {
+                alert('Please enter a challenge title and at least 1 item to sort!');
+                return;
+            }
+
+            // First line is the title, rest are items to sort
+            const title = lines[0];
+            const items = lines.slice(1);
+
+            if (items.length < 1) {
+                alert('Please enter at least 1 item to sort after the title!');
+                return;
+            }
+
+            // Update current quiz
+            currentQuiz = {
+                items: items,
+                correctOrder: [...items],
+                title: title
+            };
+
+            // Save to localStorage
+            localStorage.setItem('currentQuiz', JSON.stringify(currentQuiz));
+
+            // Generate new share URL
+            const encoded = btoa(JSON.stringify(currentQuiz));
+            const shareUrl = window.location.origin + window.location.pathname + '?quiz=' + encoded;
+            
+            document.getElementById('share-url').value = shareUrl;
+            document.getElementById('share-section').style.display = 'block';
+
+            // Update header and navigation
+            updateHeaderForGameMode();
+
+            // Show success message
+            alert('✅ Challenge updated successfully! New share link generated.');
+        }
+
+        // Reset the edit form - revert to default create mode
+        function resetEditForm() {
+            const textarea = document.getElementById('quiz-items');
+            
+            // Clear the form completely
+            textarea.value = '';
+            
+            // Hide share section
+            document.getElementById('share-section').style.display = 'none';
+            
+            // Force switch back to create mode UI (even if quiz exists)
+            updateEditMode(true);
+        }
+
         function switchToPlayMode() {
             document.querySelectorAll('.nav-btn').forEach(btn => btn.classList.remove('active'));
             document.querySelectorAll('.mode').forEach(m => m.classList.remove('active'));
@@ -510,6 +843,10 @@ Moon Landing (1969)"></textarea>
 
             gameCompleted = false;
             
+            // Clear tap selection
+            selectedItem = null;
+            hideTapIndicator();
+            
             // Shuffle the items for the user to reorder
             userOrder = [...currentQuiz.items];
             shuffleArray(userOrder);
@@ -518,6 +855,9 @@ Moon Landing (1969)"></textarea>
             saveGameState();
 
             renderQuiz();
+            
+            // Update header with quiz title
+            updateHeaderForGameMode();
         }
 
         // Render the quiz interface
@@ -525,10 +865,6 @@ Moon Landing (1969)"></textarea>
             const container = document.getElementById('quiz-content');
             
             container.innerHTML = `
-                <div class="quiz-title">${currentQuiz.title}</div>
-                <p style="text-align: center; margin-bottom: 20px; color: #666;">
-                    Drag and drop the items to put them in the correct order
-                </p>
                 <div class="items-container" id="items-container">
                     ${userOrder.map((item, index) => `
                         <div class="quiz-item" draggable="true" data-index="${index}">
@@ -543,6 +879,9 @@ Moon Landing (1969)"></textarea>
             `;
 
             setupDragAndDrop();
+            
+            // Ensure userOrder is synchronized with the DOM
+            syncUserOrderWithDOM();
         }
 
         // Shuffle array function
@@ -576,6 +915,9 @@ Moon Landing (1969)"></textarea>
                 item.addEventListener('touchstart', handleTouchStart, { passive: false });
                 item.addEventListener('touchmove', handleTouchMove, { passive: false });
                 item.addEventListener('touchend', handleTouchEnd, { passive: false });
+
+                // Tap to select functionality
+                item.addEventListener('click', handleTapSelect);
             });
 
             container.addEventListener('dragover', handleDragOver);
@@ -588,6 +930,9 @@ Moon Landing (1969)"></textarea>
         let touchStartY = 0;
         let touchElement = null;
         let placeholder = null;
+        let selectedItem = null;
+        let isDragging = false;
+        let touchStartTime = 0;
 
         function handleDragStart(e) {
             if (gameCompleted) {
@@ -636,47 +981,46 @@ Moon Landing (1969)"></textarea>
             
             touchElement = this;
             touchStartY = e.touches[0].clientY;
+            touchStartTime = Date.now();
+            isDragging = false;
             
-            // Create placeholder
-            placeholder = document.createElement('div');
-            placeholder.className = 'quiz-item';
-            placeholder.style.opacity = '0.5';
-            placeholder.style.border = '2px dashed #667eea';
-            placeholder.innerHTML = '<span class="item-number">⋯</span>Drop here';
-            
-            this.style.position = 'fixed';
-            this.style.zIndex = '1000';
-            this.style.pointerEvents = 'none';
-            this.style.transform = 'rotate(5deg)';
-            this.style.opacity = '0.8';
-            
-            this.parentNode.insertBefore(placeholder, this.nextSibling);
+            // Don't start drag immediately - wait for movement
         }
 
         function handleTouchMove(e) {
             if (!touchElement || gameCompleted) return;
             
-            e.preventDefault();
-            
             const touch = e.touches[0];
-            const element = touchElement;
+            const moveDistance = Math.abs(touch.clientY - touchStartY);
             
-            element.style.left = (touch.clientX - element.offsetWidth / 2) + 'px';
-            element.style.top = (touch.clientY - element.offsetHeight / 2) + 'px';
+            // Start dragging only if moved more than 10px
+            if (moveDistance > 10 && !isDragging) {
+                isDragging = true;
+                startDragMode(touchElement);
+            }
             
-            // Find the element we're hovering over
-            element.style.pointerEvents = 'none';
-            const elementBelow = document.elementFromPoint(touch.clientX, touch.clientY);
-            element.style.pointerEvents = 'auto';
-            
-            if (elementBelow && elementBelow.classList.contains('quiz-item') && elementBelow !== placeholder) {
-                const container = document.getElementById('items-container');
-                const afterElement = getDragAfterElement(container, touch.clientY);
+            if (isDragging) {
+                e.preventDefault();
                 
-                if (afterElement == null) {
-                    container.appendChild(placeholder);
-                } else {
-                    container.insertBefore(placeholder, afterElement);
+                const element = touchElement;
+                
+                element.style.left = (touch.clientX - element.offsetWidth / 2) + 'px';
+                element.style.top = (touch.clientY - element.offsetHeight / 2) + 'px';
+                
+                // Find the element we're hovering over
+                element.style.pointerEvents = 'none';
+                const elementBelow = document.elementFromPoint(touch.clientX, touch.clientY);
+                element.style.pointerEvents = 'auto';
+                
+                if (elementBelow && elementBelow.classList.contains('quiz-item') && elementBelow !== placeholder) {
+                    const container = document.getElementById('items-container');
+                    const afterElement = getDragAfterElement(container, touch.clientY);
+                    
+                    if (afterElement == null) {
+                        container.appendChild(placeholder);
+                    } else {
+                        container.insertBefore(placeholder, afterElement);
+                    }
                 }
             }
         }
@@ -685,7 +1029,47 @@ Moon Landing (1969)"></textarea>
             if (!touchElement || gameCompleted) return;
             
             const element = touchElement;
+            const touchDuration = Date.now() - touchStartTime;
             
+            if (isDragging) {
+                // Finish drag operation
+                endDragMode(element);
+                
+                // Replace placeholder with actual element
+                if (placeholder && placeholder.parentNode) {
+                    placeholder.parentNode.insertBefore(element, placeholder);
+                    placeholder.remove();
+                }
+                
+                updateOrder();
+            } else if (touchDuration < 300) {
+                // This was a tap, not a drag
+                handleTapSelect.call(element, e);
+            }
+            
+            touchElement = null;
+            placeholder = null;
+            isDragging = false;
+        }
+
+        function startDragMode(element) {
+            // Create placeholder
+            placeholder = document.createElement('div');
+            placeholder.className = 'quiz-item';
+            placeholder.style.opacity = '0.5';
+            placeholder.style.border = '2px dashed #667eea';
+            placeholder.innerHTML = '<span class="item-number">⋯</span>Drop here';
+            
+            element.style.position = 'fixed';
+            element.style.zIndex = '1000';
+            element.style.pointerEvents = 'none';
+            element.style.transform = 'rotate(5deg)';
+            element.style.opacity = '0.8';
+            
+            element.parentNode.insertBefore(placeholder, element.nextSibling);
+        }
+
+        function endDragMode(element) {
             // Reset styles
             element.style.position = '';
             element.style.zIndex = '';
@@ -694,17 +1078,72 @@ Moon Landing (1969)"></textarea>
             element.style.opacity = '';
             element.style.left = '';
             element.style.top = '';
+        }
+
+        function handleTapSelect(e) {
+            if (gameCompleted) return;
             
-            // Replace placeholder with actual element
-            if (placeholder && placeholder.parentNode) {
-                placeholder.parentNode.insertBefore(element, placeholder);
-                placeholder.remove();
+            e.preventDefault();
+            e.stopPropagation();
+            
+            // Clear any existing selections
+            document.querySelectorAll('.quiz-item').forEach(item => {
+                item.classList.remove('selected', 'drop-target');
+            });
+            
+            if (selectedItem === this) {
+                // Deselect if clicking the same item
+                selectedItem = null;
+                hideTapIndicator();
+            } else if (selectedItem === null) {
+                // Select this item
+                selectedItem = this;
+                this.classList.add('selected');
+                showTapIndicator();
+                
+                // Show drop targets
+                document.querySelectorAll('.quiz-item').forEach(item => {
+                    if (item !== this) {
+                        item.classList.add('drop-target');
+                    }
+                });
+            } else {
+                // Drop the selected item here
+                const selectedIndex = Array.from(selectedItem.parentNode.children).indexOf(selectedItem);
+                const targetIndex = Array.from(this.parentNode.children).indexOf(this);
+                
+                // Move the selected item
+                if (selectedIndex < targetIndex) {
+                    this.parentNode.insertBefore(selectedItem, this.nextSibling);
+                } else {
+                    this.parentNode.insertBefore(selectedItem, this);
+                }
+                
+                // Clear selection
+                selectedItem = null;
+                hideTapIndicator();
+                
+                updateOrder();
             }
-            
-            touchElement = null;
-            placeholder = null;
-            
-            updateOrder();
+        }
+
+        function showTapIndicator() {
+            let indicator = document.getElementById('tap-indicator');
+            if (!indicator) {
+                indicator = document.createElement('div');
+                indicator.id = 'tap-indicator';
+                indicator.className = 'tap-mode-indicator';
+                document.body.appendChild(indicator);
+            }
+            indicator.textContent = '📱 Tap another item to move here';
+            indicator.style.display = 'block';
+        }
+
+        function hideTapIndicator() {
+            const indicator = document.getElementById('tap-indicator');
+            if (indicator) {
+                indicator.style.display = 'none';
+            }
         }
 
         function getDragAfterElement(container, y) {
@@ -722,19 +1161,29 @@ Moon Landing (1969)"></textarea>
             }, { offset: Number.NEGATIVE_INFINITY }).element;
         }
 
-        function updateOrder() {
+        function syncUserOrderWithDOM() {
             const items = document.querySelectorAll('.quiz-item');
-            userOrder = Array.from(items).map(item => {
-                const text = item.textContent.trim();
-                return text.substring(text.indexOf(' ') + 1); // Remove the number prefix
+            userOrder = Array.from(items).map((item, index) => {
+                // Get the text content but skip the number span
+                const numberSpan = item.querySelector('.item-number');
+                const fullText = item.textContent.trim();
+                const numberText = numberSpan.textContent.trim();
+                const extracted = fullText.substring(numberText.length).trim();
+                return extracted;
             });
-            
-            // Update item numbers
+        }
+
+        function updateOrder() {
+            // Update item numbers first
+            const items = document.querySelectorAll('.quiz-item');
             items.forEach((item, index) => {
                 const numberSpan = item.querySelector('.item-number');
                 numberSpan.textContent = index + 1;
                 item.setAttribute('data-index', index);
             });
+            
+            // Then sync the order
+            syncUserOrderWithDOM();
             
             saveGameState();
         }
@@ -743,13 +1192,21 @@ Moon Landing (1969)"></textarea>
         function checkAnswers() {
             if (!currentQuiz || gameCompleted) return;
             
+            // Clear tap selection
+            selectedItem = null;
+            hideTapIndicator();
+            
+            // Ensure userOrder reflects current DOM state
+            syncUserOrderWithDOM();
+            
             gameCompleted = true;
             const items = document.querySelectorAll('.quiz-item');
             let correctCount = 0;
             
             items.forEach((item, index) => {
-                const itemText = item.textContent.trim().substring(item.textContent.trim().indexOf(' ') + 1);
-                const isCorrect = itemText === currentQuiz.correctOrder[index];
+                const userItem = userOrder[index];
+                const correctItem = currentQuiz.correctOrder[index];
+                const isCorrect = userItem === correctItem;
                 
                 if (isCorrect) {
                     item.classList.add('correct');
@@ -900,6 +1357,9 @@ Moon Landing (1969)"></textarea>
                 
                 // Switch to play mode
                 switchToPlayMode();
+                
+                // Update header and navigation
+                updateHeaderForGameMode();
                 
                 // Show success message
                 setTimeout(() => {

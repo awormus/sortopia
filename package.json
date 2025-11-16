@@ -1,0 +1,30 @@
+{
+  "name": "sortopia",
+  "version": "1.0.0",
+  "description": "A fun, interactive single-page application for creating and playing ordering challenges",
+  "main": "index.html",
+  "scripts": {
+    "start": "python -m http.server 8000",
+    "serve": "python -m http.server 8000"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/awormus/sortopia.git"
+  },
+  "keywords": [
+    "game",
+    "sorting",
+    "education",
+    "javascript",
+    "html5",
+    "mobile-friendly",
+    "drag-and-drop",
+    "single-page-app"
+  ],
+  "author": "GitHub User",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/awormus/sortopia/issues"
+  },
+  "homepage": "https://awormus.github.io/sortopia"
+}
