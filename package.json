@@ -1,6 +1,6 @@
 {
   "name": "sortopia",
-  "version": "1.0.0",
+  "version": "1.1.0",
   "description": "A fun, interactive single-page application for creating and playing ordering challenges",
   "main": "index.html",
   "scripts": {

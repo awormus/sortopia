@@ -1,6 +1,6 @@
 <!DOCTYPE html>
 <!--
-    Sortopia - The Sorting Game v1.0.0
+    Sortopia - The Sorting Game v1.1.0
     A fun, interactive single-page application for creating and playing ordering challenges.
     
     Features:
@@ -21,7 +21,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Sortopia - The Sorting Game v1.0.0</title>
+    <title>Sortopia - The Sorting Game v1.1.0</title>
     <style>
         * {
             margin: 0;
@@ -347,19 +347,168 @@
             }
         }
 
-        .item-number {
-            display: inline-block;
-            background: #667eea;
+        /* Saved Games Styles */
+        .saved-games-header {
+            text-align: center;
+            margin-bottom: 30px;
+        }
+
+        .saved-games-header h2 {
+            font-size: 1.8em;
+            color: #333;
+            margin-bottom: 10px;
+        }
+
+        .saved-games-header p {
+            color: #666;
+            font-size: 1.1em;
+        }
+
+        .saved-games-list {
+            max-height: 400px;
+            overflow-y: auto;
+        }
+
+        .saved-game-item {
+            background: white;
+            border: 2px solid #e9ecef;
+            border-radius: 12px;
+            padding: 15px 20px;
+            margin: 10px 0;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+        }
+
+        .saved-game-item:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.15);
+            border-color: #667eea;
+        }
+
+        .saved-game-info {
+            flex: 1;
+        }
+
+        .saved-game-title {
+            font-size: 1.2em;
+            font-weight: 600;
+            color: #333;
+            margin-bottom: 5px;
+        }
+
+        .saved-game-meta {
+            color: #666;
+            font-size: 0.9em;
+        }
+
+        .saved-game-actions {
+            display: flex;
+            gap: 10px;
+            align-items: center;
+        }
+
+        .delete-game-btn {
+            background: #dc3545;
             color: white;
+            border: none;
+            border-radius: 50%;
             width: 30px;
             height: 30px;
-            border-radius: 50%;
-            text-align: center;
-            line-height: 30px;
-            margin-right: 15px;
-            font-weight: 600;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
             font-size: 14px;
+            transition: all 0.3s ease;
         }
+
+        .delete-game-btn:hover {
+            background: #c82333;
+            transform: scale(1.1);
+        }
+
+        .share-game-btn {
+            background: #28a745;
+            color: white;
+            border: none;
+            border-radius: 50%;
+            width: 30px;
+            height: 30px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 16px;
+            transition: all 0.3s ease;
+            margin-right: 5px;
+        }
+
+        .share-game-btn:hover {
+            background: #218838;
+            transform: scale(1.1);
+        }
+
+        /* Toast Notification Styles */
+        .toast {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            background: linear-gradient(135deg, #28a745 0%, #20c997 100%);
+            color: white;
+            padding: 15px 20px;
+            border-radius: 8px;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
+            z-index: 2000;
+            font-weight: 600;
+            max-width: 300px;
+            word-wrap: break-word;
+            animation: slideInRight 0.3s ease, slideOutRight 0.3s ease 2.7s;
+            animation-fill-mode: both;
+        }
+
+        .toast.error {
+            background: linear-gradient(135deg, #dc3545 0%, #c82333 100%);
+        }
+
+        @keyframes slideInRight {
+            from {
+                transform: translateX(100%);
+                opacity: 0;
+            }
+            to {
+                transform: translateX(0);
+                opacity: 1;
+            }
+        }
+
+        @keyframes slideOutRight {
+            to {
+                transform: translateX(100%);
+                opacity: 0;
+            }
+        }
+
+        .empty-saved-games {
+            text-align: center;
+            padding: 60px 20px;
+            color: #666;
+        }
+
+        .empty-saved-games h3 {
+            font-size: 1.5em;
+            margin-bottom: 15px;
+        }
+
+        .empty-saved-games p {
+            font-size: 1.1em;
+            line-height: 1.6;
+        }
+
+
 
         .results {
             margin-top: 30px;
@@ -458,6 +607,23 @@
                 font-size: 14px;
                 padding: 12px 20px;
             }
+
+            .saved-game-actions {
+                gap: 8px;
+            }
+
+            .share-game-btn, .delete-game-btn {
+                width: 28px;
+                height: 28px;
+                font-size: 14px;
+            }
+
+            .toast {
+                right: 10px;
+                top: 10px;
+                max-width: 250px;
+                font-size: 14px;
+            }
         }
 
         @media (max-width: 600px) {
@@ -476,13 +642,7 @@
                 margin: 8px 0;
             }
 
-            .item-number {
-                width: 25px;
-                height: 25px;
-                line-height: 25px;
-                margin-right: 10px;
-                font-size: 12px;
-            }
+
         }
 
         /* Touch-friendly improvements */
@@ -518,6 +678,7 @@
         <nav class="nav-buttons" id="nav-menu">
             <button class="nav-btn active" onclick="switchMode('play')">Play Sortopia</button>
             <button class="nav-btn" onclick="switchMode('edit')">Create Challenge</button>
+            <button class="nav-btn" onclick="switchMode('saved')">Saved Games</button>
             <button class="nav-btn" onclick="resetGame()" style="background: #dc3545; color: white; border: 2px solid #dc3545;">Reset All</button>
         </nav>
 
@@ -529,6 +690,17 @@
                         <h3>No Challenge Loaded</h3>
                         <p>Create a new challenge using the "Create Challenge" tab (first line = title, then items to sort), or load one from a shared link.</p>
                     </div>
+                </div>
+            </div>
+
+            <!-- Saved Games Mode -->
+            <div id="saved-mode" class="mode">
+                <div class="saved-games-header">
+                    <h2>📚 Saved Games</h2>
+                    <p>Your collection of saved challenges</p>
+                </div>
+                <div id="saved-games-list" class="saved-games-list">
+                    <!-- Saved games will be populated here -->
                 </div>
             </div>
 
@@ -628,9 +800,11 @@ Moon Landing (1969)"></textarea>
             menu.classList.remove('show');
             hamburger.classList.remove('active');
             
-            // Update edit mode content based on whether we're editing or creating
+            // Update mode-specific content
             if (mode === 'edit') {
                 updateEditMode();
+            } else if (mode === 'saved') {
+                updateSavedGamesMode();
             }
             
             // Update header
@@ -811,8 +985,12 @@ Moon Landing (1969)"></textarea>
             // Update header and navigation
             updateHeaderForGameMode();
 
+            // Switch to play mode and start the updated quiz
+            switchToPlayMode();
+            startQuiz();
+
             // Show success message
-            alert('✅ Challenge updated successfully! New share link generated.');
+            showToast('✅ Challenge updated! Now playing your updated quiz.');
         }
 
         // Reset the edit form - revert to default create mode
@@ -827,6 +1005,162 @@ Moon Landing (1969)"></textarea>
             
             // Force switch back to create mode UI (even if quiz exists)
             updateEditMode(true);
+        }
+
+        // Saved Games Management
+        function getSavedGames() {
+            const saved = localStorage.getItem('savedGames');
+            return saved ? JSON.parse(saved) : {};
+        }
+
+        function saveGame(quiz) {
+            if (!quiz || !quiz.title) return;
+            
+            const savedGames = getSavedGames();
+            savedGames[quiz.title] = {
+                ...quiz,
+                savedAt: new Date().toISOString(),
+                playCount: (savedGames[quiz.title]?.playCount || 0) + 1
+            };
+            
+            localStorage.setItem('savedGames', JSON.stringify(savedGames));
+        }
+
+        function deleteGame(gameTitle) {
+            const savedGames = getSavedGames();
+            delete savedGames[gameTitle];
+            localStorage.setItem('savedGames', JSON.stringify(savedGames));
+            updateSavedGamesMode(); // Refresh the list
+        }
+
+        function loadSavedGame(gameTitle) {
+            const savedGames = getSavedGames();
+            const game = savedGames[gameTitle];
+            if (game) {
+                currentQuiz = {
+                    title: game.title,
+                    items: game.items,
+                    correctOrder: game.correctOrder
+                };
+                
+                // Switch to play mode and start the game
+                switchToPlayMode();
+                startQuiz();
+            }
+        }
+
+        function updateSavedGamesMode() {
+            const container = document.getElementById('saved-games-list');
+            const savedGames = getSavedGames();
+            const gameKeys = Object.keys(savedGames);
+            
+            if (gameKeys.length === 0) {
+                container.innerHTML = `
+                    <div class="empty-saved-games">
+                        <h3>No Saved Games</h3>
+                        <p>Games will be automatically saved when you play them. Create a challenge or load one from a shared link to get started!</p>
+                    </div>
+                `;
+                return;
+            }
+            
+            container.innerHTML = gameKeys.map(title => {
+                const game = savedGames[title];
+                const savedDate = new Date(game.savedAt).toLocaleDateString();
+                const itemCount = game.items.length;
+                
+                return `
+                    <div class="saved-game-item" onclick="loadSavedGame('${title.replace(/'/g, "\\'")}')">  
+                        <div class="saved-game-info">
+                            <div class="saved-game-title">${title}</div>
+                            <div class="saved-game-meta">${itemCount} items • Saved ${savedDate} • Played ${game.playCount} times</div>
+                        </div>
+                        <div class="saved-game-actions">
+                            <button class="share-game-btn" onclick="event.stopPropagation(); copyGameUrl('${title.replace(/'/g, "\\'")}')" title="Copy share link">🔗</button>
+                            <button class="delete-game-btn" onclick="event.stopPropagation(); confirmDeleteGame('${title.replace(/'/g, "\\'")}')" title="Delete game">🗑️</button>
+                        </div>
+                    </div>
+                `;
+            }).join('');
+        }
+
+        function confirmDeleteGame(gameTitle) {
+            if (confirm(`Are you sure you want to delete "${gameTitle}"?\n\nThis action cannot be undone.`)) {
+                deleteGame(gameTitle);
+            }
+        }
+
+        function copyGameUrl(gameTitle) {
+            const savedGames = getSavedGames();
+            const game = savedGames[gameTitle];
+            
+            if (!game) {
+                showToast('❌ Game not found!', 'error');
+                return;
+            }
+
+            // Generate share URL
+            const encoded = btoa(JSON.stringify({
+                title: game.title,
+                items: game.items,
+                correctOrder: game.correctOrder
+            }));
+            const shareUrl = window.location.origin + window.location.pathname + '?quiz=' + encoded;
+
+            // Copy to clipboard
+            if (navigator.clipboard && navigator.clipboard.writeText) {
+                navigator.clipboard.writeText(shareUrl)
+                    .then(() => {
+                        showToast('🔗 Share link copied to clipboard!');
+                    })
+                    .catch(() => {
+                        fallbackCopyToClipboard(shareUrl);
+                    });
+            } else {
+                fallbackCopyToClipboard(shareUrl);
+            }
+        }
+
+        function fallbackCopyToClipboard(text) {
+            // Fallback for older browsers
+            const textArea = document.createElement('textarea');
+            textArea.value = text;
+            textArea.style.position = 'fixed';
+            textArea.style.opacity = '0';
+            document.body.appendChild(textArea);
+            textArea.select();
+            
+            try {
+                document.execCommand('copy');
+                showToast('🔗 Share link copied to clipboard!');
+            } catch (err) {
+                showToast('❌ Copy failed. Please copy manually.', 'error');
+                console.error('Fallback copy failed:', err);
+            }
+            
+            document.body.removeChild(textArea);
+        }
+
+        function showToast(message, type = 'success') {
+            // Remove any existing toast
+            const existingToast = document.querySelector('.toast');
+            if (existingToast) {
+                existingToast.remove();
+            }
+
+            // Create new toast
+            const toast = document.createElement('div');
+            toast.className = `toast ${type}`;
+            toast.textContent = message;
+            
+            document.body.appendChild(toast);
+
+            // Auto-remove after animation
+            setTimeout(() => {
+                if (toast && toast.parentNode) {
+                    toast.remove();
+                }
+            }, 3000);
         }
 
         function switchToPlayMode() {
@@ -856,6 +1190,11 @@ Moon Landing (1969)"></textarea>
 
             renderQuiz();
             
+            // Auto-save the game when started
+            if (currentQuiz && currentQuiz.title) {
+                saveGame(currentQuiz);
+            }
+            
             // Update header with quiz title
             updateHeaderForGameMode();
         }
@@ -868,7 +1207,6 @@ Moon Landing (1969)"></textarea>
                 <div class="items-container" id="items-container">
                     ${userOrder.map((item, index) => `
                         <div class="quiz-item" draggable="true" data-index="${index}">
-                            <span class="item-number">${index + 1}</span>
                             ${item}
                         </div>
                     `).join('')}
@@ -1058,7 +1396,7 @@ Moon Landing (1969)"></textarea>
             placeholder.className = 'quiz-item';
             placeholder.style.opacity = '0.5';
             placeholder.style.border = '2px dashed #667eea';
-            placeholder.innerHTML = '<span class="item-number">⋯</span>Drop here';
+            placeholder.innerHTML = 'Drop here';
             
             element.style.position = 'fixed';
             element.style.zIndex = '1000';
@@ -1163,22 +1501,15 @@ Moon Landing (1969)"></textarea>
 
         function syncUserOrderWithDOM() {
             const items = document.querySelectorAll('.quiz-item');
-            userOrder = Array.from(items).map((item, index) => {
-                // Get the text content but skip the number span
-                const numberSpan = item.querySelector('.item-number');
-                const fullText = item.textContent.trim();
-                const numberText = numberSpan.textContent.trim();
-                const extracted = fullText.substring(numberText.length).trim();
-                return extracted;
+            userOrder = Array.from(items).map(item => {
+                return item.textContent.trim();
             });
         }
 
         function updateOrder() {
-            // Update item numbers first
+            // Update data-index attributes
             const items = document.querySelectorAll('.quiz-item');
             items.forEach((item, index) => {
-                const numberSpan = item.querySelector('.item-number');
-                numberSpan.textContent = index + 1;
                 item.setAttribute('data-index', index);
             });
             

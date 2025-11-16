@@ -1,6 +1,6 @@
 # 🎨 Sortopia - The Sorting Game
 
-**Version 1.0.0** | [Live Demo](https://awormus.github.io/sortopia) | [Changelog](CHANGELOG.md)
+**Version 1.1.0** | [Live Demo](https://awormus.github.io/sortopia) | [Changelog](CHANGELOG.md)
 
 Welcome to **Sortopia**, the magical world of sorting! A fun, interactive single-page application where you drag and drop items to put them in the correct order.
 
@@ -111,7 +111,7 @@ Contributions are welcome! Feel free to:
 
 ## 📄 Technical Details
 
-- **Version**: 1.0.0
+- **Version**: 1.1.0
 - **Framework**: Vanilla HTML/CSS/JavaScript
 - **Storage**: Local Storage API
 - **Sharing**: Base64 URL encoding
